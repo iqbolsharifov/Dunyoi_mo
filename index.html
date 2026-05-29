@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="tg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дунёи Ширин 🪐</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
+</head>
+<body>
+
+    <div id="particles-js"></div>
+    <canvas id="fireworks-canvas"></canvas>
+
+    <div id="advanced-player" class="hidden">
+        <div class="player-track-info">
+            <span id="track-name">Оҳанги Муҳаббати Мо ✨</span>
+            <div class="time-display"><span id="curr-time">0:00</span> / <span id="dur-time">0:00</span></div>
+        </div>
+        <div class="player-controls">
+            <button id="prev-btn" class="player-sub-btn">⏮️</button>
+            <button id="play-btn" class="player-main-btn">▶️</button>
+            <button id="next-btn" class="player-sub-btn">⏭️</button>
+        </div>
+        <div class="music-waves" id="waves"><span></span><span></span><span></span><span></span><span></span></div>
+    </div>
+    <audio id="bg-music" src="/ВИА Сливки - Я люблю тебя.mp3"></audio>
+
+    <div id="intro-screen" class="screen">
+        <div class="intro-content">
+            <div class="heart-pulse">❤️</div>
+            <h1>Ҷаҳони мо!</h1>
+            <p>Калиди қалби худро ворид кунед:</p>
+            <div class="login-box">
+                <input type="password" id="user-password" placeholder="Рамзи махфӣ...">
+                <button id="start-btn" class="btn-romantic">Кушодани Ҷаҳон 🔑</button>
+            </div>
+            <p id="login-error" class="error-text hidden">Рамзро дуруст ворид кун Ширинак😊 🔐</p>
+        </div>
+    </div>
+
+    <div id="main-content" class="hidden">
+        
+        <div class="welcome-user-banner">
+            <h1 id="user-greeting">Хуш омадӣ! ✨</h1>
+            <p id="online-status">✨ Дилҳо дар як дақиқа мезананд...</p>
+        </div>
+
+        <section class="premium-card animate-up">
+            <h2 class="section-title">⏱️ Ҳисобкунаки Сонияҳои Муқаддаси Мо</h2>
+            <div id="timer">
+                <div class="time-box"><span id="days">00</span><p>Рӯз</p></div>
+                <div class="time-box"><span id="hours">00</span><p>Соат</p></div>
+                <div class="time-box"><span id="minutes">00</span><p>Дақиқа</p></div>
+                <div class="time-box"><span id="seconds">00</span><p>Сония</p></div>
+            </div>
+            <p class="sub-text" style="margin-top: 15px; font-style: italic;">Аз лаҳзаи воридшавии аввалини мо ба ин сайт...</p>
+        </section>
+
+        <section class="premium-card">
+            <h2 class="section-title">🌹 Сухани Сеҳрноки Шоҳона</h2>
+            <p class="instruction">Тугмаро пахш кун ва энергияи ошиқона бигир.</p>
+            <div id="compliment-box" class="reason-box">Барои дидани сухани ошиқона тугмаро пахш кунед... ✨</div>
+            <button class="btn-romantic" onclick="generateCompliment()">Тавлиди Сухан ✨</button>
+        </section>
+
+        <section class="premium-card">
+            <h2 class="section-title">⚡ Паёми Оҷил ба Телеграм</h2>
+            <p class="instruction">Бо як пахш ба телефони ҷуфти худ паёми эҳсосотӣ бифиристед!</p>
+            <div class="fast-messages">
+                <button class="fast-msg-btn" onclick="sendFastMsg('Ман туро хеле-хеле ёд кардам! 🥺❤️')">🥺 Ёд кардам</button>
+                <button class="fast-msg-btn" onclick="sendFastMsg('Ту ягона малика/шоҳзодаи қалби ман ҳастӣ! 👑💞')">👑 Танҳо ту</button>
+                <button class="fast-msg-btn" onclick="sendFastMsg('Аллакай мехоҳам туро ба оғӯш гирам ва бӯс кунам! 💋🔥')">💋 Оғӯш & Бӯса</button>
+                <button class="fast-msg-btn" onclick="sendFastMsg('Имрӯз боз ҳам зеботар шудаӣ, ҷони ман! 🥰🌸')">🌸 Зеботарин</button>
+            </div>
+        </section>
+
+        <section class="premium-card">
+            <h2 class="section-title">📝 Девори Хотираҳо ва Паёмҳои Абадӣ</h2>
+            <p class="instruction">Паёми худро муҳр занед, он барои ҳамешагӣ мемонад ва ба Телеграм меравад.</p>
+            <div class="memory-input-zone">
+                <textarea id="memory-text-input" placeholder="Хотира ё паёми худро бинавис..."></textarea>
+                <button id="save-memory-btn" class="btn-romantic" onclick="saveForeverMemory()">Муҳр задан дар таърих ✍️</button>
+            </div>
+            <div id="forever-memories-list" class="memories-feed"></div>
+        </section>
+
+        <section class="premium-card">
+            <h2 class="section-title">🔒 Дафтари Махфии Иқбол ва Ширинмоҳ</h2>
+            <p class="instruction">Паёми махфии худро нависед. Он ТАНҲО вақте кушода мешавад, ки ҳардуи шумо тугмаи тасдиқро пахш кунед!</p>
+            <div id="secret-write-zone">
+                <textarea id="secret-input" placeholder="Паёми махфие, ки бояд ҳарду кушоед..."></textarea>
+                <button class="btn-romantic" onclick="saveSecretMessage()">Сабти паёми махфӣ 🔑</button>
+            </div>
+            <div id="secret-status-zone" class="hidden">
+                <div class="lock-icon-anim">🔒</div>
+                <h3>Ҳолати Дафтари Махфӣ:</h3>
+                <div class="status-badges">
+                    <span id="badge-iqbol" class="badge">Иқбол: ❌</span>
+                    <span id="badge-shirin" class="badge">Ширинмоҳ: ❌</span>
+                </div>
+                <button id="btn-unlock-secret" class="btn-romantic" onclick="approveSecret()">Тасдиқ ва Кушодан 🔓</button>
+            </div>
+            <div id="secret-result-zone" class="hidden reason-box" style="border-left: 5px solid #b5179e;">
+                <h3>🔓 Сирри Кушодашуда:</h3>
+                <p id="secret-text-display"></p>
+                <button class="btn-romantic" style="background: #444;" onclick="resetSecret()">Тоза кардани Сир 🔄</button>
+            </div>
+        </section>
+
+        <section class="premium-card">
+            <h2 class="section-title">💌 Сандуқи Орзуҳо (Капсулаи Вақт)</h2>
+            <p class="instruction">Орзуеро қуфл кунед, ки танҳо пас аз 24 соат пайдо мешавад.</p>
+            <div id="capsule-write-zone">
+                <textarea id="capsule-input" placeholder="Орзуи худро нависед..."></textarea>
+                <button id="capsule-btn" class="btn-romantic">Қуфл кардан ба муддати 24 соат 🔒</button>
+            </div>
+            <div id="capsule-lock-zone" class="hidden">
+                <div class="lock-icon-anim">⏳</div>
+                <h3 id="capsule-lock-owner">Орзу дар амон аст!</h3>
+                <div id="capsule-timer">24:00:00</div>
+            </div>
+            <div id="capsule-open-zone" class="hidden reason-box">
+                <h3 id="capsule-open-title">🔓 Сандуқ кушода шуд!</h3>
+                <p id="capsule-saved-text"></p>
+            </div>
+        </section>
+
+        <section class="premium-card">
+            <h2 class="section-title">🗺️ Харитаи Орзуҳои Муштараки Мо</h2>
+            <div class="dream-roadmap">
+                <div class="dream-item" id="dream-1" onclick="activateDream(1, 'Саёҳати дунафара ба соҳили баҳр 🌊')">
+                    <div class="dream-status">⏳ Омодагӣ</div>
+                    <div class="dream-icon">🌊</div>
+                    <h3>Саёҳат ба соҳили баҳр</h3>
+                    <div class="dream-progress-bar"><div class="dream-progress" style="width: 45%;"></div></div>
+                    <button class="btn-dream-heart">❤️ Лайк</button>
+                </div>
+                <div class="dream-item" id="dream-2" onclick="activateDream(2, 'Хонаи шинам ва оилаи мо 🏡')">
+                    <div class="dream-status">⏳ Дар нақша</div>
+                    <div class="dream-icon">🏡</div>
+                    <h3>Хонаи Ояндаи Мо</h3>
+                    <div class="dream-progress-bar"><div class="dream-progress" style="width: 30%;"></div></div>
+                    <button class="btn-dream-heart">❤️ Лайк</button>
+                </div>
+                <div class="dream-item" id="dream-3" onclick="activateDream(3, 'Шоми романтикӣ дар Париж 🗼')">
+                    <div class="dream-status">⏳ Орзу</div>
+                    <div class="dream-icon">🗼</div>
+                    <h3>Қадамзанӣ дар Париж</h3>
+                    <div class="dream-progress-bar"><div class="dream-progress" style="width: 20%;"></div></div>
+                    <button class="btn-dream-heart">❤️ Лайк</button>
+                </div>
+                <div class="dream-item" id="dream-4" onclick="activateDream(4, 'Рӯзи Тӯйи Бошукӯҳи Мо 💍')">
+                    <div class="dream-status">✨ Ҳадафи Олӣ</div>
+                    <div class="dream-icon">💍</div>
+                    <h3>Рӯзи Муқаддаси Тӯй</h3>
+                    <div class="dream-progress-bar"><div class="dream-progress" style="width: 65%;"></div></div>
+                    <button class="btn-dream-heart">❤️ Лайк</button>
+                </div>
+            </div>
+            <div class="add-custom-dream">
+                <h3>➕ Иловаи орзуи нави шахсӣ</h3>
+                <div class="note-input-container">
+                    <input type="text" id="custom-dream-input" placeholder="Орзуи нави моро навис...">
+                    <button class="btn-romantic" onclick="submitCustomDream()">Илова кардан ✨</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="premium-card">
+            <h2 class="section-title">🎭 Табъи имрӯзаи ту чӣ гуна аст?</h2>
+            <div class="mood-container">
+                <button class="mood-btn" onclick="setMood('happy')">🥰 Хурсанд</button>
+                <button class="mood-btn" onclick="setMood('sad')">🥺 Дилгир</button>
+                <button class="mood-btn" onclick="setMood('tired')">😴 Хаста</button>
+                <button class="mood-btn" onclick="setMood('romantic')">🌹 Ошиқона</button>
+            </div>
+            <div id="mood-result" class="hidden reason-box"></div>
+        </section>
+
+        <section class="premium-card">
+            <h2 class="section-title">🔮 Тести Мутобиқати Психо-Энергетикӣ</h2>
+            <form id="romantic-form" class="quiz-form">
+                <div class="form-group"><label>1. Аввалин хислате, ки туро ба ман ҷалб кард?</label><input type="text" id="q1" required></div>
+                <div class="form-group"><label>2. Саёҳати орзуҳои дунафараамон ба куҷост?</label><input type="text" id="q2" required></div>
+                <div class="form-group"><label>3. Кадом оҳанг туро ҳамеша ба ёди ман меорад?</label><input type="text" id="q3" required></div>
+                <div class="form-group"><label>4. Барои ту беҳтарин шом чӣ гуна аст?</label><textarea id="q4" required></textarea></div>
+                <div class="form-group"><label>5. Мо ояндаи худро пас аз 5 сол чӣ гуна мебинем?</label><textarea id="q5" required></textarea></div>
+                <button type="submit" class="btn-romantic">Таҳлили Натиҷаҳо 📊</button>
+            </form>
+            <div id="quiz-result-block" class="hidden">
+                <h3>Мутобиқати Рӯҳии Мо: 100% Абадӣ ✨</h3>
+                <div style="position: relative; height:250px; width:100%; margin: 20px auto;"><canvas id="compatibilityChart"></canvas></div>
+            </div>
+        </section>
+
+        <section class="premium-card">
+            <h2 class="section-title">🎰 Слот-Машинаи Тақдир</h2>
+            <div class="slot-machine"><div class="slot" id="slot1">❤️</div><div class="slot" id="slot2">💎</div><div class="slot" id="slot3">👑</div></div>
+            <button id="spin-slot-btn" class="btn-romantic">Бахти худро бисанҷ 🕹️</button>
+            <h4 id="slot-message" style="margin-top: 15px; color: #ff4d6d;"></h4>
+        </section>
+
+        <section class="premium-card">
+            <h2 class="section-title">📅 Рӯзномаи Таърихии Мо</h2>
+            <div class="memory-calendar">
+                <div class="cal-day" onclick="showMemory('Рӯзи ошноии аввалин ва ба замин омадани фариштаи ман... 🌟')">01.09</div>
+                <div class="cal-day" onclick="showMemory('Рӯзе, ки қалбҳои мо ба якдигар пайваст шуданд... 💞')">15.10</div>
+                <div class="cal-day" onclick="showMemory('Рӯзи таваллуди Ширинак... 🎂')">10.04</div>
+                <div class="cal-day" onclick="showMemory('Рӯзи сохта шудани ин олами виртуалии мо... 💻')">30.05</div>
+            </div>
+            <div id="calendar-text-box" class="hidden"></div>
+        </section>
+
+        <section class="premium-card">
+            <h2 class="section-title">🎡 Чархи Сюрпризҳои Романтикӣ</h2>
+            <div class="wheel-wrapper">
+                <div id="wheel" class="wheel">
+                    <div class="sector" style="--i:1;--clr:#ff758f;"><span>Бӯса 💋</span></div>
+                    <div class="sector" style="--i:2;--clr:#ffb703;"><span>Ба Кино 🍿</span></div>
+                    <div class="sector" style="--i:3;--clr:#8ecae6;"><span>Шоколуд 🍫</span></div>
+                    <div class="sector" style="--i:4;--clr:#b5179e;"><span>Туҳфа 🎁</span></div>
+                    <div class="sector" style="--i:5;--clr:#72efdd;"><span>Кафе ☕</span></div>
+                    <div class="sector" style="--i:6;--clr:#4cc9f0;"><span>Оғӯш 🤗</span></div>
+                </div>
+                <div class="pointer">👇</div>
+                <button id="spin-btn" class="btn-romantic">Айлантир 🌀</button>
+            </div>
+            <h3 id="wheel-result" class="hidden"></h3>
+        </section>
+
+        <section class="premium-card">
+            <h2>Маро ҳақиқатдан дӯст медорӣ? 🥺</h2>
+            <div class="quiz-buttons">
+                <button id="yes-btn" class="btn-romantic">ҲА 💖</button>
+                <button id="no-btn" class="btn-romantic no-btn">НЕ 💔</button>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
