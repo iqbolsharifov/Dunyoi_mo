@@ -114,3 +114,25 @@ body { background: #07000e; color: #f8f9fa; overflow-x: hidden; }
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
 ::-webkit-scrollbar-thumb { background: rgba(255, 77, 109, 0.3); border-radius: 10px; }
+/* Стили махсус барои акси муштараки мо */
+.our-photo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 15px 0;
+}
+
+.our-love-photo {
+    width: 180px;            /* Андозаи хуб: на калон, на хурд */
+    height: 180px;
+    object-fit: cover;       /* Расмро намеёзад, балки зебо мебурад */
+    border-radius: 50%;      /* Шакли комилан гирд (круглый) */
+    border: 4px solid #ff4d6d; /* Чаҳорчӯбаи гулобии ошиқона */
+    box-shadow: 0 0 15px rgba(255, 77, 109, 0.6); /* Дурахши атрофи расм */
+    transition: transform 0.3s ease;
+}
+
+/* Эффекти калоншавӣ вақте ки ба расм тугмаро мебарӣ */
+.our-love-photo:hover {
+    transform: scale(1.08);
+}
