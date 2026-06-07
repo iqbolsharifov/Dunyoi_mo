@@ -1,9 +1,12 @@
-// 1. ТОКЕН ВА ID-ҲОИ НАВ БАРОИ ҲАРДУИ ШУМО
+// =========================================================================
+// 🌐 СУПЕР-ПЛАТФОРМАИ МУҲАББАТ: ИҚБОЛ ВА ШИРИНМОҲ (PRO SYSTEM v3.0)
+// =========================================================================
+
 const TELEGRAM_TOKEN = '8905985495:AAHk3Sv06_RquIdfPXIkBLMESYtGpyg9AYk'; 
 const IQBOL_CHAT_ID = '6555076911'; 
 const SHIRIN_CHAT_ID = '6993404562'; 
 
-// Функсияи асосӣ барои фиристодани паём ба Телеграми ҳардуи шумо
+// 1. СИСТЕМАИ УСТУВОРИ СИГНАЛРАСОНӢ БА ТЕЛЕГРАМ
 function sendToTelegram(messageText) {
     const ids = [IQBOL_CHAT_ID, SHIRIN_CHAT_ID];
     ids.forEach(chatId => {
@@ -17,7 +20,25 @@ function sendToTelegram(messageText) {
     });
 }
 
-// РАМЗҲОИ НАВ ВА МАХФӢ (БЕ НИШОН ДОДАНИ РАМЗ ДАР ТЕЛЕГРАМ)
+// Функсияи синхронӣ барои гум нашудани паёми баромад (ҳатто ҳангоми пӯшидани саҳифа дар телефон)
+function sendLeaveNotification() {
+    if (CURRENT_USER !== "Меҳмон") {
+        const text = `🚨 БАРОМАД АЗ СИСТЕМА:\n👤 Корбар: ${CURRENT_USER}\n🚪 Саҳифаро баст ё тарк кард.\n⏰ Вақт: ${new Date().toLocaleTimeString()}`;
+        const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+        const data = JSON.stringify({ chat_id: IQBOL_CHAT_ID, text: text });
+        const dataShirin = JSON.stringify({ chat_id: SHIRIN_CHAT_ID, text: text });
+        
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon(url, new Blob([data], {type: 'application/json'}));
+            navigator.sendBeacon(url, new Blob([dataShirin], {type: 'application/json'}));
+        } else {
+            fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: data, keepalive: true });
+            fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: dataShirin, keepalive: true });
+        }
+    }
+}
+
+// РАМЗҲОИ КОНФИДЕНСИАЛӢ
 const USERS = {
     "shirinak": { name: "Ширинмоҳ", role: "shirin" },
     "iqbol": { name: "Иқбол", role: "iqbol" }
@@ -33,15 +54,14 @@ document.getElementById('start-btn').addEventListener('click', () => {
         document.getElementById('intro-screen').classList.add('hidden');
         document.getElementById('main-content').classList.remove('hidden');
         document.getElementById('advanced-player').classList.remove('hidden');
-        document.getElementById('user-greeting').innerText = `Хуш омадӣ, ${CURRENT_USER}! ✨`;
+        document.getElementById('user-greeting').innerText = `Авторизатсия: ${CURRENT_USER} ✨`;
         
-        // Овезаи даромад ба Телеграм (Танҳо ном, бе нишон додани рамз)
-        sendToTelegram(`🚪 Даромад ба сайт:\n👤 ${CURRENT_USER} вориди сайт шуд. \n⏰ Вақт: ${new Date().toLocaleTimeString()}`);
+        sendToTelegram(`🔓 ВОРИДШАВӢ БА СИСТЕМА:\n👤 Корбар: ${CURRENT_USER} бо муваффақият даромад.\n📱 Платформа: Web Browser\n⏰ Вақт: ${new Date().toLocaleTimeString()}`);
         
-        // Ба кор андохтани тамоми атмосфераи синамоӣ
         initTimer();
         playMusic();
-        initCinematicSystem(); 
+        initCinematicSystem();
+        updateLoveDashboard();
     } else {
         const err = document.getElementById('login-error');
         err.classList.remove('hidden');
@@ -49,14 +69,12 @@ document.getElementById('start-btn').addEventListener('click', () => {
     }
 });
 
-// ОВЕЗАИ БАРОМАД АЗ САЙТ
-window.addEventListener('beforeunload', () => {
-    if (CURRENT_USER !== "Меҳмон") {
-        sendToTelegram(`🚶 Баромад аз сайт:\n👤 ${CURRENT_USER} саҳифаро баст ё тарк кард. \n⏰ Вақт: ${new Date().toLocaleTimeString()}`);
-    }
-});
+// Назорати қатъии баромадан аз сайт (Ҳам барои iOS, Android ва PC)
+window.addEventListener('pagehide', sendLeaveNotification);
+window.addEventListener('beforeunload', sendLeaveNotification);
+window.addEventListener('unload', sendLeaveNotification);
 
-// 2. ТАЙМЕРИ ДУРШАВӢ
+// 2. ТАЙМЕРИ ДУРШАВӢ ВА ҲИСОБКУНАК
 function initTimer() {
     const separationDate = new Date(2026, 5, 7, 18, 0, 0); 
     const startTime = separationDate.getTime();
@@ -72,7 +90,7 @@ function initTimer() {
     }, 1000);
 }
 
-// 3. МУСИҚӢ ВА ПЛЕЕР
+// 3. МУСИҚӢ ВА АУДИОФАЙЛҲО
 const audio = document.getElementById('bg-music');
 const playBtn = document.getElementById('play-btn');
 let isPlaying = false;
@@ -80,7 +98,7 @@ let isPlaying = false;
 function playMusic() {
     audio.play().then(() => {
         isPlaying = true;
-        playBtn.innerText = "⏸️";
+        if(playBtn) playBtn.innerText = "⏸️";
         const w = document.getElementById('waves');
         if(w) w.classList.add('active');
     }).catch(err => console.log("Авто-плей маҳкам аст"));
@@ -95,22 +113,29 @@ if(playBtn) {
     });
 }
 
-audio.addEventListener('timeupdate', () => {
-    const cur = Math.floor(audio.currentTime);
-    const dur = Math.floor(audio.duration) || 0;
-    const cTime = document.getElementById('curr-time');
-    const dTime = document.getElementById('dur-time');
-    if(cTime) cTime.innerText = `${Math.floor(cur/60)}:${cur%60 < 10 ? '0'+cur%60 : cur%60}`;
-    if(dTime) dTime.innerText = `${Math.floor(dur/60)}:${dur%60 < 10 ? '0'+dur%60 : dur%60}`;
-});
+if(audio) {
+    audio.addEventListener('timeupdate', () => {
+        const cur = Math.floor(audio.currentTime);
+        const dur = Math.floor(audio.duration) || 0;
+        const cTime = document.getElementById('curr-time');
+        const dTime = document.getElementById('dur-time');
+        if(cTime) cTime.innerText = `${Math.floor(cur/60)}:${cur%60 < 10 ? '0'+cur%60 : cur%60}`;
+        if(dTime) dTime.innerText = `${Math.floor(dur/60)}:${dur%60 < 10 ? '0'+dur%60 : dur%60}`;
+    });
+}
 
-// 4. ТЕЛЕГРАММАҲОИ ОҶИЛ
+// 4. ПАЁМҲОИ ОҶИЛ ВА СИГНАЛИ ҚАЛБ (SOS HEARTBEAT)
 function sendFastMsg(msgText) {
-    sendToTelegram(`⚡ Оҷил аз номи ${CURRENT_USER}:\n👉 ${msgText}`);
+    sendToTelegram(`⚡ ОҶИЛ АЗ НОМИ ${CURRENT_USER}:\n👉 ${msgText}`);
     alert('Паёми оҷилии ту ба Телеграм рафт! 💞');
 }
 
-// 5. ДЕВОРИ ХОТИРАҲО
+function triggerHeartbeatSOS() {
+    sendToTelegram(`💓 СИГНАЛИ ОҶИЛИИ ҚАЛБ!\n👤 Аз номи: ${CURRENT_USER}\n💬 Паём: "Дили ман дар ин сонияҳо ба шиддат туро ёд кардааст ва метапад! Ин як сигнали олии муҳаббат аст!" 🔥`);
+    alert('Сигнали оҷилии дил ба Телеграм фиристода шуд! ❤️‍🔥');
+}
+
+// 5. ДЕВОРИ ХОТИРАҲОИ АБИДӢ
 function saveForeverMemory() {
     const input = document.getElementById('memory-text-input');
     const text = input.value.trim();
@@ -119,7 +144,7 @@ function saveForeverMemory() {
     const now = new Date();
     const timeString = `${now.getDate()}.${now.getMonth()+1}.${now.getFullYear()} | ${now.getHours()}:${now.getMinutes() < 10 ? '0'+now.getMinutes() : now.getMinutes()}`;
     
-    sendToTelegram(`📝 Паёми Нав дар Девор:\n👤 Муаллиф: ${CURRENT_USER}\n💬 Матн: "${text}"`);
+    sendToTelegram(`📝 БЕҲТАРИН ХОТИРАИ НАВ:\n👤 Муаллиф: ${CURRENT_USER}\n💬 Матн: "${text}"`);
     
     let list = JSON.parse(localStorage.getItem('forever_memories')) || [];
     list.push({ author: CURRENT_USER, content: text, time: timeString });
@@ -140,185 +165,104 @@ function loadForeverMemories() {
 }
 document.addEventListener("DOMContentLoaded", loadForeverMemories);
 
-// 6. СУХАНИ СЕҲРНОК
-const COMPLIMENTS = [
-    "Ту зеботарин маликаи дунёӣ! 🌸",
-    "Дунёи ман бо ту равшан аст, ҷони ман! ✨",
-    "Ҳар сонияе бо ту ҳастам, хушбахтам! 🥰",
-    "Хандаҳои ту маро зинда нигоҳ медоранд! 👑",
-    "Дили ман танҳо барои ту метапад! ❤️"
-];
-function generateCompliment() {
-    const txt = COMPLIMENTS[Math.floor(Math.random() * COMPLIMENTS.length)];
-    const box = document.getElementById('compliment-box');
-    if(box) box.innerText = txt;
-}
 
-// 7. САНДУҚИ ОРЗУҲО (КАПСУЛАИ 24-СОАТА)
-const capBtn = document.getElementById('capsule-btn');
-if(capBtn) {
-    capBtn.addEventListener('click', () => {
-        const text = document.getElementById('capsule-input').value.trim();
-        if(text) {
-            localStorage.setItem('capsule_text', text);
-            localStorage.setItem('capsule_unlock_time', new Date().getTime() + (24 * 60 * 60 * 1000));
-            localStorage.setItem('capsule_owner', CURRENT_USER);
-            
-            sendToTelegram(`🔒 Капсулаи 24-соат аз ${CURRENT_USER} қуфл шуд!`);
-            alert('Орзу ба муддати 24 соат қуфл шуд! 🔒');
-            document.getElementById('capsule-input').value = "";
-        }
-    });
-}
-
-// 8. ХАРИТАИ ОРЗУҲО
-function activateDream(id, name) {
-    sendToTelegram(`✨ ${CURRENT_USER} ба орзуи "${name}" лайки ошиқона монд!`);
-    alert(`Орзуи "${name}" лайк гирифт! 💞`);
-}
-
-function submitCustomDream() {
-    const input = document.getElementById('custom-dream-input');
-    const text = input.value.trim();
-    if(text) {
-        sendToTelegram(`➕ Орзуи нави муштарак аз ${CURRENT_USER}: "${text}"`);
-        alert('Орзуи нави мо ба рӯйхат илова шуд! 🚀'); 
-        input.value = '';
-    }
-}
-
-// 9. СЛОТ-МАШИНАИН ТАҚДИР
-const spinSlot = document.getElementById('spin-slot-btn');
-if(spinSlot) {
-    spinSlot.addEventListener('click', () => {
-        const SLOTS_EMOJIS = ['❤️', '💎', '👑', '🌸', '✨'];
-        const s1 = SLOTS_EMOJIS[Math.floor(Math.random()*5)];
-        const s2 = SLOTS_EMOJIS[Math.floor(Math.random()*5)];
-        const s3 = SLOTS_EMOJIS[Math.floor(Math.random()*5)];
-        if(document.getElementById('slot1')) document.getElementById('slot1').innerText = s1;
-        if(document.getElementById('slot2')) document.getElementById('slot2').innerText = s2;
-        if(document.getElementById('slot3')) document.getElementById('slot3').innerText = s3;
-        if(document.getElementById('slot-message')) document.getElementById('slot-message').innerText = (s1===s2 && s2===s3) ? "🎉 Ишқи мо 100% соф аст!" : "💞 Тақдири мо якҷоя аст!";
-    });
-}
-
-// 10. ТЕСТ ВА ДИАГРАММА
-const rForm = document.getElementById('romantic-form');
-if(rForm) {
-    rForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        let msg = `🔮 Ҷавобҳои Тест аз номи ${CURRENT_USER}:\n`;
-        for(let i=1; i<=5; i++) { msg += `${i}. ${document.getElementById('q'+i).value}\n`; }
-        
-        sendToTelegram(msg);
-        
-        document.getElementById('romantic-form').classList.add('hidden');
-        document.getElementById('quiz-result-block').classList.remove('hidden');
-        
-        if (typeof Chart !== 'undefined') {
-            new Chart(document.getElementById('compatibilityChart').getContext('2d'), {
-                type: 'radar',
-                data: {
-                    labels: ['Вафодорӣ', 'Мутобиқат', 'Энергетика', 'Ишқ', 'Эътимод'],
-                    datasets: [{ data: [100, 100, 100, 100, 100], backgroundColor: 'rgba(255, 77, 109, 0.25)', borderColor: '#ff4d6d', borderWidth: 2 }]
-                },
-                options: { scales: { r: { max: 100, min: 0, ticks: { display: false } } }, plugins: { legend: { display: false } } }
-            });
-        }
-    });
-}
-
-// ==========================================
-// 🎭 СИСТЕМАИ ТАҲЛИЛИ ҲИССИЁТ ВА НИШОНАҲО
-// ==========================================
+// =========================================================================
+// 📊 БАХШИ МУҲИМ: ЖУРНАЛИ СЕРФУНКСИЯ ВА ТАҲЛИЛИ ЭҲСОСОТ (LOVE DASHBOARD)
+// =========================================================================
 const MOOD_DATA = {
-    "хушҳол": { emoji: "😊", title: "Рӯҳияи Дурахшон", desc: "Дар қалби ту нуре ҳаст, ки ҳатто дар ториктарин рӯзҳо медурахшад. Ин хушбахтиро ҳифз кун.", color: "#ffcbd1" },
-    "норохат": { emoji: "😔", title: "Скути Қалб", desc: "Нороҳатӣ нишонаи он аст, ки қалбат ба истироҳат ва оромӣ ниёз дорад. Ҳеҷ чиз ҳамешагӣ нест.", color: "#a2d2ff" },
-    "махзун": { emoji: "😢", title: "Ашки Борон", desc: "Гунҷиши эҳсосот устувор нест. Бигзор ин маҳзунӣ мисли борони замина бирезад ва қалбатро пок кунад.", color: "#bde0fe" },
-    "ором": { emoji: "🍃", title: "Гармии Насим", desc: "Оромӣ бузургтарин қувват аст. Вақте дарун ором аст, тӯфонҳои беруна ҳеҷ таъсире надоранд.", color: "#d8f3dc" },
-    "ошиқ": { emoji: "💖", title: "Шӯълаи Абдӣ", desc: "Ишқ ягона эҳсосест, ки масофа ва вақтро намешиносад. Он ҳамеша зинда аст.", color: "#ff4d6d" }
+    "хушҳол": { emoji: "😊", title: "Рӯҳияи Дурахшон", desc: "Дар қалби ту нуре ҳаст, ки ҳама ҷоро равшан мекунад.", color: "#ffcbd1", score: 15 },
+    "зиқ": { emoji: "😔", title: "Скути Маҳзун", desc: "Нороҳат ва зиқ шудан нишонаи он аст, ки қалбат ба меҳр ниёз дорад. Ман бо туам.", color: "#a2d2ff", score: 5 },
+    "махзун": { emoji: "😢", title: "Ашки Борон", desc: "Бигзор ин маҳзунӣ бирезад ва қалбатро сабук кунад.", color: "#bde0fe", score: 5 },
+    "ором": { emoji: "🍃", title: "Гармии Насим", desc: "Оромӣ бузургтарин қувват ва мувозинати қалб аст.", color: "#d8f3dc", score: 10 },
+    "ошиқ": { emoji: "💖", title: "Шӯълаи Абдӣ", desc: "Ишқ ягона эҳсосест, ки масофа ва вақтро зуд нест мекунад.", color: "#ff4d6d", score: 25 },
+    
+    // ЭҲСОСОТИ ОШИҚОНА
+    "оғӯш": { emoji: "🤗", title: "Тангии Оғӯш", desc: "Эҳсоси гармие, ки тамоми дардҳоро дар як сония фаромӯш кунонида, оромӣ мебахшад.", color: "#ffd166", score: 20 },
+    "бӯса": { emoji: "💋", title: "Нафаси Ширин", desc: "Нишонаи калиди қалбҳо ва изҳори муҳаббати содиқонаву бепоён.", color: "#ff4d6d", score: 20 },
+    "ёд кардам": { emoji: "❤️‍🩹", title: "Ёди Дилнавоз", desc: "Вақте дил барои касе танг мешавад, тамоми олам танҳо симои ӯро нишон медиҳад.", color: "#f72585", score: 25 }
 };
 
 function setMood(moodKey) {
-    const mood = MOOD_DATA[moodKey.toLowerCase()] || { emoji: "🎭", title: "Ҳиссиёт", desc: "Эҳсоси зиндагӣ.", color: "#fff" };
+    let key = moodKey.toLowerCase();
+    if (key === "sad" || key === "норохат") key = "зиқ";
+
+    const mood = MOOD_DATA[key] || { emoji: "🎭", title: "Ҳиссиёт", desc: "Эҳсос.", color: "#fff", score: 10 };
     
     let history = JSON.parse(localStorage.getItem('mood_history')) || [];
-    history.push({ user: CURRENT_USER, mood: moodKey, time: new Date().getTime() });
+    history.push({ user: CURRENT_USER, mood: key, timestamp: new Date().getTime() });
     localStorage.setItem('mood_history', JSON.stringify(history));
 
-    const userMoods = history.filter(h => h.user === CURRENT_USER);
-    const total = userMoods.length;
-    
-    let counts = {};
-    userMoods.forEach(m => counts[m.mood] = (counts[m.mood] || 0) + 1);
-    
-    let analysisText = `📊 Таҳлили Эҳсосоти умумии ${CURRENT_USER}:\n`;
-    Object.keys(counts).forEach(k => {
-        const percent = Math.round((counts[k] / total) * 100);
-        analysisText += `• ${k.toUpperCase()}: ${percent}%\n`;
-    });
-
-    showMoodAlert(mood, analysisText);
-
-    sendToTelegram(`🎭 Овезаи Эҳсоси Нав!\n👤 Корбар: ${CURRENT_USER}\n✨ Ҳолати ҳозира: ${mood.emoji} ${mood.title}\n\n${analysisText}⏰ Вақт: ${new Date().toLocaleTimeString()}`);
+    updateLoveDashboard(mood);
 }
 
-function showMoodAlert(mood, analysis) {
+function updateLoveDashboard(activeMood = null) {
+    let history = JSON.parse(localStorage.getItem('mood_history')) || [];
+    const userMoods = history.filter(h => h.user === CURRENT_USER);
+    const totalCount = userMoods.length;
+    
+    let totalPoints = 0;
+    let counts = { "оғӯш": 0, "бӯса": 0, "ёд кардам": 0, "зиқ": 0, "ошиқ": 0, "хушҳол": 0, "махзун": 0, "ором": 0 };
+    
+    userMoods.forEach(m => {
+        if(MOOD_DATA[m.mood]) {
+            totalPoints += MOOD_DATA[m.mood].score;
+            if(counts[m.mood] !== undefined) counts[m.mood]++;
+        }
+    });
+
+    // Формулаи интеллектуалии фоизи муҳаббат
+    let lovePercentage = 60 + (totalPoints % 41);
+    if (lovePercentage > 100 || totalPoints > 500) lovePercentage = 100;
+
+    let analysisText = `📊 САТҲИ ЖУРНАЛИ КУНУНӢ:\n`;
+    Object.keys(counts).forEach(k => {
+        const count = counts[k];
+        const pct = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
+        analysisText += `• ${k.toUpperCase()}: ${pct}% (${count} бор)\n`;
+    });
+
+    if (activeMood) {
+        showMoodAlert(activeMood, analysisText, lovePercentage);
+        sendToTelegram(`📖 САБТИ НАВ ДАР ЖУРНАЛИ МУҲАББАТ:\n👤 Корбар: ${CURRENT_USER}\n✨ Амал: ${activeMood.emoji} ${activeMood.title}\n\n${analysisText}\n❤️ ФОИЗИ УМУМИИ МУҲАББАТ: ${lovePercentage}%\n⏰ Вақт: ${new Date().toLocaleTimeString()}`);
+    }
+}
+
+function showMoodAlert(mood, analysis, lovePercent) {
     const oldAlert = document.getElementById('mood-popup-alert');
     if(oldAlert) oldAlert.remove();
 
     const alertBox = document.createElement('div');
     alertBox.id = 'mood-popup-alert';
-    alertBox.style.position = 'fixed';
-    alertBox.style.top = '20%'; alertBox.style.left = '50%';
-    alertBox.style.transform = 'translate(-50%, -50%) scale(0.9)';
-    alertBox.style.background = 'rgba(15, 15, 25, 0.95)';
-    alertBox.style.border = `2px solid ${mood.color}`;
-    alertBox.style.boxShadow = `0 0 25px ${mood.color}`;
-    alertBox.style.padding = '25px'; alertBox.style.borderRadius = '15px';
-    alertBox.style.color = '#fff'; alertBox.style.width = '320px';
-    alertBox.style.zIndex = '1000000'; alertBox.style.textAlign = 'center';
-    alertBox.style.transition = 'all 0.3s ease'; alertBox.style.opacity = '0';
-
+    alertBox.className = 'cyber-romantic-popup';
+    
     alertBox.innerHTML = `
-        <div style="font-size: 45px; margin-bottom: 10px;">${mood.emoji}</div>
-        <h3 style="color: ${mood.color}; margin: 5px 0; font-size: 20px;">${mood.title}</h3>
-        <p style="font-size: 13px; color: #ccc; line-height: 1.4; margin-bottom: 15px;">"${mood.desc}"</p>
-        <hr style="border: 0; border-top: 1px dashed rgba(255,255,255,0.2); margin: 10px 0;">
-        <div style="font-size: 11px; text-align: left; color: #a2d2ff; white-space: pre-line;">${analysis}</div>
-        <button id='close-mood-btn' style="margin-top: 15px; background: ${mood.color}; color: #000; border: none; padding: 6px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">Фаҳмидам</button>
+        <div class="mood-emoji-pulse" style="font-size: 60px; margin-bottom: 10px; filter: drop-shadow(0 0 15px ${mood.color});">${mood.emoji}</div>
+        <h3 style="color: ${mood.color}; margin: 5px 0; font-size: 24px; font-weight: 700; text-transform: uppercase;">${mood.title}</h3>
+        <p style="font-size: 14px; color: #f0f0f0; line-height: 1.5; margin-bottom: 15px;">"${mood.desc}"</p>
+        
+        <div style="margin: 18px 0;">
+            <div style="display: flex; justify-content: space-between; font-size: 13px; color: #ff4d6d; margin-bottom: 5px; font-weight: bold; text-shadow: 0 0 5px rgba(255,77,109,0.3);">
+                <span>📊 БАЛАНСИ МУҲАББАТ</span>
+                <span>${lovePercent}%</span>
+            </div>
+            <div style="width: 100%; background: rgba(255,255,255,0.08); height: 10px; border-radius: 5px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+                <div style="width: ${lovePercent}%; background: linear-gradient(90deg, #ff4d6d, ${mood.color}, #f72585); height: 100%; border-radius: 5px; transition: width 1.2s cubic-bezier(0.075, 0.82, 0.165, 1);"></div>
+            </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px dashed rgba(255,255,255,0.15); margin: 15px 0;">
+        <div style="font-size: 11.5px; text-align: left; color: #e0f1ff; white-space: pre-line; font-family: 'Courier New', monospace; background: rgba(5, 5, 15, 0.5); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); max-height: 120px; overflow-y: auto;">${analysis}</div>
+        <button id='close-mood-btn' style="margin-top: 20px; background: linear-gradient(135deg, #ff4d6d, ${mood.color}); color: #fff; border: none; padding: 10px 35px; border-radius: 30px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; transition: all 0.3s; box-shadow: 0 4px 20px ${mood.color}50;">Тасдиқ кардан</button>
     `;
 
     document.body.appendChild(alertBox);
-
-    setTimeout(() => {
-        alertBox.style.transform = 'translate(-50%, -50%) scale(1)';
-        alertBox.style.opacity = '1';
-    }, 50);
+    setTimeout(() => { alertBox.style.transform = 'translate(-50%, -50%) scale(1)'; alertBox.style.opacity = '1'; }, 50);
 
     document.getElementById('close-mood-btn').addEventListener('click', () => {
-        alertBox.style.transform = 'translate(-50%, -50%) scale(0.9)';
-        alertBox.style.opacity = '0';
+        alertBox.style.transform = 'translate(-50%, -50%) scale(0.9)'; alertBox.style.opacity = '0';
         setTimeout(() => alertBox.remove(), 300);
     });
 }
-
-function showMemory(txt) { const b = document.getElementById('calendar-text-box'); b.innerText = txt; b.classList.remove('hidden'); }
-
-const spinBtn = document.getElementById('spin-btn');
-if(spinBtn) {
-    spinBtn.addEventListener('click', () => {
-        const wheel = document.getElementById('wheel');
-        const deg = Math.floor(3000 + Math.random() * 3000);
-        wheel.style.transform = `rotate(${deg}deg)`;
-        setTimeout(() => { alert("🎉 Сюрпризи ту омода шуд!"); }, 5000);
-    });
-}
-
-const yBtn = document.getElementById('yes-btn');
-if(yBtn) { yBtn.addEventListener('click', () => { sendToTelegram(`💖 ${CURRENT_USER} тугмаи "ҲА"-ро пахш кард!`); alert("Ман ҳам туро дӯст медорам! 🥰"); }); }
-const noBtn = document.getElementById('no-btn');
-if(noBtn) { noBtn.addEventListener('mouseover', () => { noBtn.style.position = 'absolute'; noBtn.style.top = Math.random()*80 + '%'; noBtn.style.left = Math.random()*80 + '%'; }); }
 
 
 // ========================================================
@@ -383,15 +327,6 @@ function initCinematicSystem() {
         setTimeout(() => meteor.remove(), 1500);
     }, 3000);
 
-    setInterval(() => {
-        if(Math.random() > 0.3) {
-            const flash = document.createElement('div');
-            flash.className = 'lightning-flash';
-            view.appendChild(flash);
-            setTimeout(() => flash.remove(), 300);
-        }
-    }, 14000);
-
     const LEAF_EMOJIS = ['🍂', '🍁'];
     setInterval(() => {
         const leaf = document.createElement('div');
@@ -400,16 +335,28 @@ function initCinematicSystem() {
         leaf.style.left = Math.random() * 100 + 'vw';
         leaf.style.fontSize = Math.random() * 12 + 12 + 'px';
         leaf.style.animationDuration = (Math.random() * 4 + 4) + 's'; 
-        leaf.style.animationDelay = Math.random() * 2 + 's';
         leaf.style.opacity = Math.random() * 0.5 + 0.3;
-        
         view.appendChild(leaf);
         setTimeout(() => leaf.remove(), 8000);
     }, 900);
 }
 
+// ДОБАВЛЕНИЕ СТИЛЕЙ
 const dynamicStyles = document.createElement("style");
 dynamicStyles.innerText = `
+.cyber-romantic-popup {
+    position: fixed; top: 25%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    background: rgba(14, 11, 22, 0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.7), inset 0 0 20px rgba(255,255,255,0.02);
+    padding: 35px; border-radius: 28px;
+    color: #fff; width: 340px; z-index: 1000000;
+    text-align: center; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity: 0;
+}
+
 .cinematic-star { position: absolute; background: #fff; border-radius: 50%; opacity: 0.4; animation: twinkleC 4s infinite ease-in-out; }
 @keyframes twinkleC { 0%, 100% { opacity: 0.1; } 50% { opacity: 0.7; } }
 
@@ -419,7 +366,7 @@ dynamicStyles.innerText = `
 .drop-splash { position: absolute; bottom: 0; width: 6px; height: 3px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.4); border-bottom: none; animation: splashAnim 0.4s ease-out forwards; }
 @keyframes splashAnim { 0% { transform: scale(0.5); opacity: 0.8; } 100% { transform: scale(2.5); opacity: 0; } }
 
-.dynamic-meteor { position: absolute; width: 3px; height: 3px; background: #fff; border-radius: 50%; boxShadow: 0 0 15px #fff; animation: meteorAnim linear forwards; }
+.dynamic-meteor { position: absolute; width: 3px; height: 3px; background: #fff; border-radius: 50%; animation: meteorAnim linear forwards; }
 .meteor-tail { position: absolute; top: 0; left: 0; width: 110px; height: 1px; background: linear-gradient(to left, rgba(255,255,255,0.6), transparent); transform: rotate(-40deg) translateX(-110px); }
 @keyframes meteorAnim { 0% { transform: translate(0, 0) rotate(40deg); opacity: 1; } 100% { transform: translate(-600px, 600px) rotate(40deg); opacity: 0; } }
 
@@ -428,14 +375,14 @@ dynamicStyles.innerText = `
 .fog-layer-2 { background: radial-gradient(circle at 30% 40%, rgba(255,255,255,0.02), transparent 50%); animation: fogMove 45s linear infinite reverse; }
 @keyframes fogMove { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-.lightning-flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.07); animation: lightningAnim 0.35s ease-out forwards; }
-@keyframes lightningAnim { 0%, 100% { opacity: 0; } 20%, 40% { opacity: 1; } 30% { opacity: 0.3; } }
-
 .falling-leaf { position: absolute; top: -20px; pointer-events: none; user-select: none; animation: leafFallAnim linear forwards; }
 @keyframes leafFallAnim {
     0% { transform: translateY(0) translateX(0) rotate(0deg); }
     50% { transform: translateY(50vh) translateX(30px) rotate(180deg); }
     100% { transform: translateY(105vh) translateX(-20px) rotate(360deg); }
 }
+
+.mood-emoji-pulse { animation: emojiPulse 2s infinite ease-in-out; }
+@keyframes emojiPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 `;
 document.head.appendChild(dynamicStyles);
