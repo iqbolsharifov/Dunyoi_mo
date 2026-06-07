@@ -231,3 +231,40 @@ document.getElementById('spin-btn').addEventListener('click', () => {
 document.getElementById('yes-btn').addEventListener('click', () => { sendToTelegram(`💖 ${CURRENT_USER} тугмаи "ҲА"-ро пахш кард! Ӯ туро дӯст медорад!`); alert("Ман ҳам туро дӯст медорам! 🥰"); });
 const noBtn = document.getElementById('no-btn');
 noBtn.addEventListener('mouseover', () => { noBtn.style.position = 'absolute'; noBtn.style.top = Math.random()*80 + '%'; noBtn.style.left = Math.random()*80 + '%'; });
+// ФУНКСИЯИ ОФАРИНИШИ БОРОНИ РАҚАМӢ
+function createRainEffect() {
+    const rainContainer = document.createElement('div');
+    rainContainer.style.position = 'fixed';
+    rainContainer.style.top = '0';
+    rainContainer.style.left = '0';
+    rainContainer.style.width = '100vw';
+    rainContainer.style.height = '100vh';
+    rainContainer.style.pointerEvents = 'none'; // Ба пахши тугмаҳо халал намерасонад
+    rainContainer.style.zIndex = '9999'; // Дар болои ҳама унсурҳо меистад
+    rainContainer.style.overflow = 'hidden';
+    document.body.appendChild(rainContainer);
+
+    // Ҳар 150 миллисония як қатраи нав месозад
+    setInterval(() => {
+        const drop = document.createElement('div');
+        drop.className = 'rain-drop';
+        
+        // Мавқеи тасодуфӣ аз чап ба рост
+        drop.style.left = Math.random() * 100 + 'vw';
+        // Суръати тасодуфии афтиш (барои табиӣ намуд додан)
+        drop.style.animationDuration = (Math.random() * 1.5 + 1) + 's';
+        // Шаффофияти тасодуфӣ
+        drop.style.opacity = Math.random() * 0.4 + 0.1;
+        
+        rainContainer.appendChild(drop);
+
+        // Пас аз ба охир расидани аниматсия қатраро нест мекунад
+        setTimeout(() => {
+            drop.remove();
+        }, 2500);
+    }, 150);
+}
+
+// Эффектро фавран пас аз боршавии сайт ба кор медарорем
+document.addEventListener("DOMContentLoaded", createRainEffect);
+
