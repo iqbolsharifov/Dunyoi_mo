@@ -20,7 +20,7 @@ function sendToTelegram(messageText) {
 
 // РАМЗҲОИ ВОРИДШАВӢ
 const USERS = {
-    "100403": { name: "Ширинмоҳ", role: "shirin" },
+    "shirinak": { name: "Ширинмоҳ", role: "shirin" },
     "160205": { name: "Иқбол", role: "iqbol" }
 };
 
