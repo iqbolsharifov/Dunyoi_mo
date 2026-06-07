@@ -17,26 +17,6 @@ function sendToTelegram(messageText) {
     });
 }
 
-// Функсияи махсус барои баромадан (ки дар телефонҳо ҳам кор кунад)
-function sendLeaveNotification() {
-    if (CURRENT_USER !== "Меҳмон") {
-        const text = `🚶 Баромад аз сайт:\n👤 ${CURRENT_USER} саҳифаро баст ё тарк кард. \n⏰ Вақт: ${new Date().toLocaleTimeString()}`;
-        // Истифодаи fetch бо усули синхронӣ барои гум нашудани паём ҳангоми пӯшидан
-        fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: IQBOL_CHAT_ID, text: text }),
-            keepalive: true
-        });
-        fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: SHIRIN_CHAT_ID, text: text }),
-            keepalive: true
-        });
-    }
-}
-
 // РАМЗҲОИ НАВ ВА МАХФӢ
 const USERS = {
     "shirinak": { name: "Ширинмоҳ", role: "shirin" },
@@ -67,9 +47,11 @@ document.getElementById('start-btn').addEventListener('click', () => {
     }
 });
 
-// МОНИТОРИНГИ БАРОМАД (ҲАМ БАРОИ ТЕЛЕФОН ВА ҲАМ КОМПЮТЕР)
-window.addEventListener('pagehide', sendLeaveNotification);
-window.addEventListener('beforeunload', sendLeaveNotification);
+window.addEventListener('beforeunload', () => {
+    if (CURRENT_USER !== "Меҳмон") {
+        sendToTelegram(`🚶 Баромад аз сайт:\n👤 ${CURRENT_USER} саҳифаро баст ё тарк кард. \n⏰ Вақт: ${new Date().toLocaleTimeString()}`);
+    }
+});
 
 // 2. ТАЙМЕРИ ДУРШАВӢ
 function initTimer() {
@@ -244,67 +226,55 @@ if(rForm) {
 }
 
 
-// =========================================================================
-// 🎭 ЖУРНАЛИ ЭЛЕКТРОНИИ ЭҲСОСОТ ВА БАЛАНСИ ФОИЗИИ МУҲАББАТ (LOVE JOURNAL)
-// =========================================================================
+// =========================================================
+// 🎭 СИСТЕМАИ ТАҲЛИЛИ ҲИССИЁТ, НИШОНАҲО ВА ТАБЪҲОИ ТОҶИКӢ
+// =========================================================
 const MOOD_DATA = {
-    "хушҳол": { emoji: "😊", title: "Рӯҳияи Дурахшон", desc: "Дар қалби ту нуре ҳаст, ки ҳама ҷоро равшан мекунад.", color: "#ffcbd1", loveScore: 15 },
-    "зиқ": { emoji: "😔", title: "Скути Маҳзун", desc: "Нороҳат ва зиқ шудан нишонаи тасаллӣ ва меҳр аст. Ман ҳамеша бо туам.", color: "#a2d2ff", loveScore: 5 },
-    "махзун": { emoji: "😢", title: "Ашки Борон", desc: "Бигзор ин маҳзунӣ бирезад ва қалбатро сабук кунад.", color: "#bde0fe", loveScore: 5 },
-    "ором": { emoji: "🍃", title: "Гармии Насим", desc: "Оромӣ бузургтарин қувват ва мувозинати қалб аст.", color: "#d8f3dc", loveScore: 10 },
-    "ошиқ": { emoji: "💖", title: "Шӯълаи Абдӣ", desc: "Ишқ ягона эҳсосест, ки масофа ва вақтро зуд нест мекунад.", color: "#ff4d6d", loveScore: 25 },
+    "хушҳол": { emoji: "😊", title: "Рӯҳияи Дурахшон", desc: "Дар қалби ту нуре ҳаст, ки ҳама ҷоро равшан мекунад.", color: "#ffcbd1" },
+    "зиқ": { emoji: "😔", title: "Скути Маҳзун", desc: "Нороҳат ва зиқ шудан нишонаи он аст, ки қалбат ба гармиву тасаллӣ ниёз дорад. Ман ҳамеша бо туам.", color: "#a2d2ff" },
+    "махзун": { emoji: "😢", title: "Ашки Борон", desc: "Бигзор ин маҳзунӣ мисли борони замина бирезад ва қалбатро сабук кунад.", color: "#bde0fe" },
+    "ором": { emoji: "🍃", title: "Гармии Насим", desc: "Оромӣ бузургтарин қувват аст. Вақте дарун ором аст, тӯфонҳо ҳеҷанд.", color: "#d8f3dc" },
+    "ошиқ": { emoji: "💖", title: "Шӯълаи Абдӣ", desc: "Ишқ ягона эҳсосест, ки масофа ва вақтро зуд нест мекунад.", color: "#ff4d6d" },
     
-    // ЭҲСОСОТИ ОШИҚОНАИ НАВ
-    "оғӯш": { emoji: "🤗", title: "Тангии Оғӯш", desc: "Эҳсоси гармие, ки тамоми дардҳоро дар як сония фаромӯш кунонида, оромӣ мебахшад.", color: "#ffd166", loveScore: 20 },
-    "бӯса": { emoji: "💋", title: "Нафаси Ширин", desc: "Нишонаи калиди қалбҳо ва изҳори муҳаббати содиқонаву бепоён.", color: "#ff4d6d", loveScore: 20 },
-    "ёд кардам": { emoji: "❤️‍🩹", title: "Ёди Дилнавоз", desc: "Вақте дил барои касе танг мешавад, тамоми олам танҳо симои ӯро нишон медиҳад.", color: "#f72585", loveScore: 20 }
+    // ЭҲСОСОТИ НАВУ ОШИҚОНА
+    "оғӯш": { emoji: "🤗", title: "Тангии Оғӯш", desc: "Эҳсоси гармие, ки тамоми дардҳо ва масофаҳоро дар як сония фаромӯш кунонида, оромӣ мебахшад.", color: "#ffd166" },
+    "бӯса": { emoji: "💋", title: "Нафаси Ширин", desc: "Нишонаи калиди қалбҳо ва изҳори муҳаббати содиқонаву бепоён.", color: "#ff4d6d" },
+    "ёд кардам": { emoji: "❤️‍🩹", title: "Ёди Дилнавоз", desc: "Вақте дил барои касе танг мешавад, ҳар як гӯшаи ин сайт танҳо симои урои нишон медиҳад.", color: "#f72585" }
 };
 
 function setMood(moodKey) {
+    // Агар калимаи англисии собиқ ояд, онро ба тоҷикӣ мегузаронем
     let key = moodKey.toLowerCase();
     if (key === "sad" || key === "норохат") key = "зиқ";
 
-    const mood = MOOD_DATA[key] || { emoji: "🎭", title: "Ҳиссиёт", desc: "Эҳсоси зиндагӣ.", color: "#fff", loveScore: 10 };
+    const mood = MOOD_DATA[key] || { emoji: "🎭", title: "Ҳиссиёт", desc: "Эҳсоси зиндагӣ.", color: "#fff" };
     
-    // 1. Сабт дар хотираи Журнали сайт
+    // Сабт дар хотираи сайт
     let history = JSON.parse(localStorage.getItem('mood_history')) || [];
     history.push({ user: CURRENT_USER, mood: key, time: new Date().getTime() });
     localStorage.setItem('mood_history', JSON.stringify(history));
 
-    // 2. ҲИСОБ КАРДАНИ ФОИЗИ УМУМИИ МУҲАББАТ (LOVE PERCENTAGE)
+    // Таҳлили фоизии умумӣ
     const userMoods = history.filter(h => h.user === CURRENT_USER);
+    const total = userMoods.length;
     
-    let totalLovePoints = 0;
-    userMoods.forEach(m => {
-        const data = MOOD_DATA[m.mood];
-        if (data) totalLovePoints += data.loveScore;
-    });
-
-    // Фоизро дар доираи 50% то 100% танзим мекунем, то ҳамеша нишондиҳандаи баланди ошиқона дошта бошад
-    let lovePercentage = 50 + (totalLovePoints % 51);
-    if (lovePercentage > 100) lovePercentage = 100;
-
-    // 3. Таҳлили фоизии табъҳо барои Журнал
-    const totalCount = userMoods.length;
     let counts = {};
     userMoods.forEach(m => counts[m.mood] = (counts[m.mood] || 0) + 1);
     
-    let analysisText = `📊 ЖУРНАЛИ ЭҲСОСОТ:\n`;
+    let analysisText = `📊 Таҳлили Эҳсосоти умумии ${CURRENT_USER}:\n`;
     Object.keys(counts).forEach(k => {
-        const percent = Math.round((counts[k] / totalCount) * 100);
+        const percent = Math.round((counts[k] / total) * 100);
         analysisText += `• ${k.toUpperCase()}: ${percent}%\n`;
     });
-    
-    analysisText += `\n❤️ ДАРАҶАИ МУҲАББАТИ КУНУНИИ ТУ: ${lovePercentage}%`;
 
-    // 4. Намоиши Журнали визуалӣ дар экран
-    showMoodAlert(mood, analysisText, lovePercentage);
+    // Намоиши поп-апи зебои замонавӣ
+    showMoodAlert(mood, analysisText);
 
-    // 5. Паёми устувор ба Телеграм
-    sendToTelegram(`📖 Сабти Нав дар Журнали Муҳаббат!\n👤 Корбар: ${CURRENT_USER}\n✨ Амал/Эҳсос: ${mood.emoji} ${mood.title}\n\n${analysisText}\n\n⏰ Вақт: ${new Date().toLocaleTimeString()}`);
+    // Паёми дуруст ва касбӣ ба Телеграм (Бе калимаҳои хориҷӣ, маҳз бо забони тоҷикӣ)
+    sendToTelegram(`🎭 Нишонаи Эҳсоси Нав!\n👤 Корбар: ${CURRENT_USER}\n✨ Ҳолати ҳозира: ${mood.emoji} ${mood.title}\n\n${analysisText}⏰ Вақт: ${new Date().toLocaleTimeString()}`);
 }
 
-function showMoodAlert(mood, analysis, lovePercent) {
+function showMoodAlert(mood, analysis) {
     const oldAlert = document.getElementById('mood-popup-alert');
     if(oldAlert) oldAlert.remove();
 
@@ -313,34 +283,24 @@ function showMoodAlert(mood, analysis, lovePercent) {
     alertBox.style.position = 'fixed';
     alertBox.style.top = '25%'; alertBox.style.left = '50%';
     alertBox.style.transform = 'translate(-50%, -50%) scale(0.9)';
-    alertBox.style.background = 'rgba(18, 14, 28, 0.9)';
-    alertBox.style.backdropFilter = 'blur(15px)';
-    alertBox.style.webkitBackdropFilter = 'blur(15px)';
-    alertBox.style.border = `1px solid rgba(255, 77, 109, 0.25)`;
-    alertBox.style.boxShadow = `0 20px 40px rgba(0,0,0,0.6), 0 0 30px ${mood.color}35`;
-    alertBox.style.padding = '30px'; alertBox.style.borderRadius = '24px';
-    alertBox.style.color = '#fff'; alertBox.style.width = '340px';
+    // Стили муосири Glassmorphism
+    alertBox.style.background = 'rgba(20, 20, 35, 0.85)';
+    alertBox.style.backdropFilter = 'blur(12px)';
+    alertBox.style.webkitBackdropFilter = 'blur(12px)';
+    alertBox.style.border = `1px solid rgba(255, 255, 255, 0.1)`;
+    alertBox.style.boxShadow = `0 15px 35px rgba(0,0,0,0.5), 0 0 20px ${mood.color}40`;
+    alertBox.style.padding = '30px'; alertBox.style.borderRadius = '20px';
+    alertBox.style.color = '#fff'; alertBox.style.width = '330px';
     alertBox.style.zIndex = '1000000'; alertBox.style.textAlign = 'center';
     alertBox.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'; alertBox.style.opacity = '0';
 
     alertBox.innerHTML = `
-        <div class="mood-emoji-pulse" style="font-size: 55px; margin-bottom: 12px; filter: drop-shadow(0 0 12px ${mood.color});">${mood.emoji}</div>
-        <h3 style="color: ${mood.color}; margin: 5px 0; font-size: 22px; font-weight: 600;">${mood.title}</h3>
-        <p style="font-size: 13.5px; color: #e0e0e0; line-height: 1.5; margin-bottom: 15px; font-style: italic;">"${mood.desc}"</p>
-        
-        <div style="margin: 15px 0 10px 0;">
-            <div style="display: flex; justify-content: space-between; font-size: 12px; color: #ff4d6d; margin-bottom: 4px; font-weight: bold;">
-                <span>Муҳаббати умумӣ</span>
-                <span>${lovePercent}%</span>
-            </div>
-            <div style="width: 100%; background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden;">
-                <div style="width: ${lovePercent}%; background: linear-gradient(90deg, #ff4d6d, ${mood.color}); height: 100%; border-radius: 4px; transition: width 1s ease-out;"></div>
-            </div>
-        </div>
-
+        <div class="mood-emoji-pulse" style="font-size: 55px; margin-bottom: 15px; filter: drop-shadow(0 0 10px ${mood.color});">${mood.emoji}</div>
+        <h3 style="color: ${mood.color}; margin: 5px 0; font-size: 22px; font-weight: 600; letter-spacing: 0.5px;">${mood.title}</h3>
+        <p style="font-size: 13.5px; color: #e0e0e0; line-height: 1.5; margin-bottom: 18px; font-style: italic;">"${mood.desc}"</p>
         <hr style="border: 0; border-top: 1px dashed rgba(255,255,255,0.15); margin: 12px 0;">
-        <div style="font-size: 12px; text-align: left; color: #a2d2ff; white-space: pre-line; font-family: 'Courier New', monospace; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">${analysis}</div>
-        <button id='close-mood-btn' style="margin-top: 20px; background: linear-gradient(135deg, #ff4d6d, ${mood.color}); color: #fff; border: none; padding: 10px 30px; border-radius: 30px; cursor: pointer; font-weight: bold; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(255, 77, 109, 0.3);">Олии аҷоиб</button>
+        <div style="font-size: 12px; text-align: left; color: #a2d2ff; white-space: pre-line; font-family: monospace; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">${analysis}</div>
+        <button id='close-mood-btn' style="margin-top: 20px; background: linear-gradient(135deg, ${mood.color}, #fff); color: #000; border: none; padding: 8px 25px; border-radius: 30px; cursor: pointer; font-weight: bold; transition: transform 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">Фаҳмидам</button>
     `;
 
     document.body.appendChild(alertBox);
