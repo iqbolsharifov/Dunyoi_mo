@@ -1,7 +1,7 @@
 // 1. ТОКЕН ВА ID-ҲОИ НАВ БАРОИ ҲАРДУИ ШУМО
 const TELEGRAM_TOKEN = '8905985495:AAHk3Sv06_RquIdfPXIkBLMESYtGpyg9AYk'; 
 const IQBOL_CHAT_ID = '6555076911'; 
-const SHIRIN_CHAT_ID = 'РАҚАМИ_ИД_И_ШИРИНМОҲРО_ИН_ҶО_НАВИС'; // 👈 Айдӣ-и Ширинмоҳро ин ҷо гузор
+const SHIRIN_CHAT_ID = '6993404562'; // 👈 Айдии нави Ширинмоҳ бомуваффақият ворид шуд
 
 // Функсияи асосӣ барои фиристодани паём ба ҳарду қалб ҳамзамон
 function sendToTelegram(messageText) {
@@ -20,13 +20,13 @@ function sendToTelegram(messageText) {
 
 // РАМЗҲОИ ВОРИДШАВӢ
 const USERS = {
-    "100403": { name: "Ширинмоҳ", role: "shirinak" },
-    "160205": { name: "Иқбол", role: "iqbol" }
+    "1004": { name: "Ширинмоҳ", role: "shirin" },
+    "1908": { name: "Иқбол", role: "iqbol" }
 };
 
 let CURRENT_USER = "Меҳмон";
 
-// ИДОРАКУНИИ ВОРИДШАВӢ
+// ИДОРАКУНИИ ВОРИДШАВӢ (БО ОВЕЗАИ ДАРОМАД БА ТЕЛЕГРАМ)
 document.getElementById('start-btn').addEventListener('click', () => {
     const pass = document.getElementById('user-password').value.trim();
     if (USERS[pass]) {
@@ -35,6 +35,9 @@ document.getElementById('start-btn').addEventListener('click', () => {
         document.getElementById('main-content').classList.remove('hidden');
         document.getElementById('advanced-player').classList.remove('hidden');
         document.getElementById('user-greeting').innerText = `Хуш омадӣ, ${CURRENT_USER}! ✨`;
+        
+        // 🔔 Овезаи даромад ба Телеграми ҳарду
+        sendToTelegram(`🚪 Даромад ба сайт:\n👤 Касе бо рамзи ${pass} (${CURRENT_USER}) вориди сайт шуд. \n⏰ Вақт: ${new Date().toLocaleTimeString()}`);
         
         // Ба кор андохтани таймер ва мусиқӣ
         initTimer();
@@ -46,11 +49,18 @@ document.getElementById('start-btn').addEventListener('click', () => {
     }
 });
 
-// 2. ТАЙМЕРИ МУҚАДДАС (МУСТАҚИМАН ДАР КОД БАРОИ ГИТҲАБ)
+// ҲАНГОМИ БАРОМАДАН Ё ПӮШИДАНИ САҲИФА (ОВЕЗАИ БАРОМАД)
+window.addEventListener('beforeunload', () => {
+    if (CURRENT_USER !== "Меҳмон") {
+        sendToTelegram(`🚶 Баромад аз сайт:\n👤 ${CURRENT_USER} саҳифаи сайтро баст ё тарк кард. \n⏰ Вақт: ${new Date().toLocaleTimeString()}`);
+    }
+});
+
+// 2. ТАЙМЕРИ МУҚАДДАС (РӮЗИ ДУРШАВӢ: 7 ИЮНИ 2026)
 function initTimer() {
-    // Рӯзи оғози умумии шумо: 30 Майи соли 2026, соати 01:25:00
-    // Эзоҳ: Моҳи Май дар JavaScript рақами 4 аст!
-    const sacredStartDate = new Date(2026, 4, 30, 1, 25, 0); 
+    // Рӯзи дуршавии шумо: 7 Июни соли 2026, соати 18:00:00
+    // Эзоҳ: Моҳи Июн дар JavaScript рақами 5 аст!
+    const sacredStartDate = new Date(2026, 5, 7, 18, 0, 0); 
     const startTime = sacredStartDate.getTime();
 
     setInterval(() => {
@@ -97,7 +107,7 @@ function sendFastMsg(msgText) {
     alert('Паёми оҷилии ту ба Телеграм рафт! 💞');
 }
 
-// 5. ДЕВОРИ ХОТИРАҲО
+// 5. DEVOРИ ХОТИРАҲО
 function saveForeverMemory() {
     const input = document.getElementById('memory-text-input');
     const text = input.value.trim();
