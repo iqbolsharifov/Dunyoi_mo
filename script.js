@@ -1,12 +1,11 @@
 // 1. ТОКЕН ВА ID-ҲОИ НАВ БАРОИ ҲАРДУИ ШУМО
 const TELEGRAM_TOKEN = '8905985495:AAHk3Sv06_RquIdfPXIkBLMESYtGpyg9AYk'; 
 const IQBOL_CHAT_ID = '6555076911'; 
-const SHIRIN_CHAT_ID = '6993404562'; // 👈 Айдии Ширинмоҳ бомуваффақият ворид шуд
+const SHIRIN_CHAT_ID = '6993404562'; 
 
 // Функсияи асосӣ барои фиристодани паём ба Телеграми ҳардуи шумо
 function sendToTelegram(messageText) {
     const ids = [IQBOL_CHAT_ID, SHIRIN_CHAT_ID];
-    
     ids.forEach(chatId => {
         if(chatId) {
             fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
@@ -18,10 +17,10 @@ function sendToTelegram(messageText) {
     });
 }
 
-// РАМЗҲОИ ВОРИДШАВӢ
+// РАМЗҲОИ НАВ ВА МАХФӢ (БЕ НИШОН ДОДАНИ РАМЗ ДАР ТЕЛЕГРАМ)
 const USERS = {
-    "1004": { name: "Ширинмоҳ", role: "shirin" },
-    "1908": { name: "Иқбол", role: "iqbol" }
+    "shirinak": { name: "Ширинмоҳ", role: "shirin" },
+    "iqbol": { name: "Иқбол", role: "iqbol" }
 };
 
 let CURRENT_USER = "Меҳмон";
@@ -36,13 +35,13 @@ document.getElementById('start-btn').addEventListener('click', () => {
         document.getElementById('advanced-player').classList.remove('hidden');
         document.getElementById('user-greeting').innerText = `Хуш омадӣ, ${CURRENT_USER}! ✨`;
         
-        // Овезаи даромад ба Телеграм
+        // Овезаи даромад ба Телеграм (Танҳо ном, бе нишон додани рамз)
         sendToTelegram(`🚪 Даромад ба сайт:\n👤 ${CURRENT_USER} вориди сайт шуд. \n⏰ Вақт: ${new Date().toLocaleTimeString()}`);
         
-        // Ба кор андохтани функсияҳо
+        // Ба кор андохтани тамоми атмосфераи синамоӣ
         initTimer();
         playMusic();
-        startRainEffect(); // 🌧️ Борон маҳз ҳамин ҷо ба таври автоматӣ меборад
+        initCinematicSystem(); 
     } else {
         const err = document.getElementById('login-error');
         err.classList.remove('hidden');
@@ -57,7 +56,7 @@ window.addEventListener('beforeunload', () => {
     }
 });
 
-// 2. ТАЙМЕРИ ДУРШАВӢ (7 ИЮНИ 2026)
+// 2. ТАЙМЕРИ ДУРШАВӢ
 function initTimer() {
     const separationDate = new Date(2026, 5, 7, 18, 0, 0); 
     const startTime = separationDate.getTime();
@@ -229,7 +228,81 @@ if(rForm) {
     });
 }
 
-function setMood(m) { sendToTelegram(`🎭 Табъи имрӯзаи ${CURRENT_USER}: ${m}`); alert('Табъи ту ба ҷуфтат маълум шуд! 😊'); }
+// ==========================================
+// 🎭 СИСТЕМАИ ТАҲЛИЛИ ҲИССИЁТ ВА НИШОНАҲО
+// ==========================================
+const MOOD_DATA = {
+    "хушҳол": { emoji: "😊", title: "Рӯҳияи Дурахшон", desc: "Дар қалби ту нуре ҳаст, ки ҳатто дар ториктарин рӯзҳо медурахшад. Ин хушбахтиро ҳифз кун.", color: "#ffcbd1" },
+    "норохат": { emoji: "😔", title: "Скути Қалб", desc: "Нороҳатӣ нишонаи он аст, ки қалбат ба истироҳат ва оромӣ ниёз дорад. Ҳеҷ чиз ҳамешагӣ нест.", color: "#a2d2ff" },
+    "махзун": { emoji: "😢", title: "Ашки Борон", desc: "Гунҷиши эҳсосот устувор нест. Бигзор ин маҳзунӣ мисли борони замина бирезад ва қалбатро пок кунад.", color: "#bde0fe" },
+    "ором": { emoji: "🍃", title: "Гармии Насим", desc: "Оромӣ бузургтарин қувват аст. Вақте дарун ором аст, тӯфонҳои беруна ҳеҷ таъсире надоранд.", color: "#d8f3dc" },
+    "ошиқ": { emoji: "💖", title: "Шӯълаи Абдӣ", desc: "Ишқ ягона эҳсосест, ки масофа ва вақтро намешиносад. Он ҳамеша зинда аст.", color: "#ff4d6d" }
+};
+
+function setMood(moodKey) {
+    const mood = MOOD_DATA[moodKey.toLowerCase()] || { emoji: "🎭", title: "Ҳиссиёт", desc: "Эҳсоси зиндагӣ.", color: "#fff" };
+    
+    let history = JSON.parse(localStorage.getItem('mood_history')) || [];
+    history.push({ user: CURRENT_USER, mood: moodKey, time: new Date().getTime() });
+    localStorage.setItem('mood_history', JSON.stringify(history));
+
+    const userMoods = history.filter(h => h.user === CURRENT_USER);
+    const total = userMoods.length;
+    
+    let counts = {};
+    userMoods.forEach(m => counts[m.mood] = (counts[m.mood] || 0) + 1);
+    
+    let analysisText = `📊 Таҳлили Эҳсосоти умумии ${CURRENT_USER}:\n`;
+    Object.keys(counts).forEach(k => {
+        const percent = Math.round((counts[k] / total) * 100);
+        analysisText += `• ${k.toUpperCase()}: ${percent}%\n`;
+    });
+
+    showMoodAlert(mood, analysisText);
+
+    sendToTelegram(`🎭 Овезаи Эҳсоси Нав!\n👤 Корбар: ${CURRENT_USER}\n✨ Ҳолати ҳозира: ${mood.emoji} ${mood.title}\n\n${analysisText}⏰ Вақт: ${new Date().toLocaleTimeString()}`);
+}
+
+function showMoodAlert(mood, analysis) {
+    const oldAlert = document.getElementById('mood-popup-alert');
+    if(oldAlert) oldAlert.remove();
+
+    const alertBox = document.createElement('div');
+    alertBox.id = 'mood-popup-alert';
+    alertBox.style.position = 'fixed';
+    alertBox.style.top = '20%'; alertBox.style.left = '50%';
+    alertBox.style.transform = 'translate(-50%, -50%) scale(0.9)';
+    alertBox.style.background = 'rgba(15, 15, 25, 0.95)';
+    alertBox.style.border = `2px solid ${mood.color}`;
+    alertBox.style.boxShadow = `0 0 25px ${mood.color}`;
+    alertBox.style.padding = '25px'; alertBox.style.borderRadius = '15px';
+    alertBox.style.color = '#fff'; alertBox.style.width = '320px';
+    alertBox.style.zIndex = '1000000'; alertBox.style.textAlign = 'center';
+    alertBox.style.transition = 'all 0.3s ease'; alertBox.style.opacity = '0';
+
+    alertBox.innerHTML = `
+        <div style="font-size: 45px; margin-bottom: 10px;">${mood.emoji}</div>
+        <h3 style="color: ${mood.color}; margin: 5px 0; font-size: 20px;">${mood.title}</h3>
+        <p style="font-size: 13px; color: #ccc; line-height: 1.4; margin-bottom: 15px;">"${mood.desc}"</p>
+        <hr style="border: 0; border-top: 1px dashed rgba(255,255,255,0.2); margin: 10px 0;">
+        <div style="font-size: 11px; text-align: left; color: #a2d2ff; white-space: pre-line;">${analysis}</div>
+        <button id='close-mood-btn' style="margin-top: 15px; background: ${mood.color}; color: #000; border: none; padding: 6px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">Фаҳмидам</button>
+    `;
+
+    document.body.appendChild(alertBox);
+
+    setTimeout(() => {
+        alertBox.style.transform = 'translate(-50%, -50%) scale(1)';
+        alertBox.style.opacity = '1';
+    }, 50);
+
+    document.getElementById('close-mood-btn').addEventListener('click', () => {
+        alertBox.style.transform = 'translate(-50%, -50%) scale(0.9)';
+        alertBox.style.opacity = '0';
+        setTimeout(() => alertBox.remove(), 300);
+    });
+}
+
 function showMemory(txt) { const b = document.getElementById('calendar-text-box'); b.innerText = txt; b.classList.remove('hidden'); }
 
 const spinBtn = document.getElementById('spin-btn');
@@ -247,23 +320,122 @@ if(yBtn) { yBtn.addEventListener('click', () => { sendToTelegram(`💖 ${CURRENT
 const noBtn = document.getElementById('no-btn');
 if(noBtn) { noBtn.addEventListener('mouseover', () => { noBtn.style.position = 'absolute'; noBtn.style.top = Math.random()*80 + '%'; noBtn.style.left = Math.random()*80 + '%'; }); }
 
-// 🌧️ СИСТЕМАИ БОРОНИ РАҚАМӢ
-function startRainEffect() {
-    const rainContainer = document.createElement('div');
-    rainContainer.style.position = 'fixed';
-    rainContainer.style.top = '0'; rainContainer.style.left = '0';
-    rainContainer.style.width = '100vw'; rainContainer.style.height = '100vh';
-    rainContainer.style.pointerEvents = 'none'; rainContainer.style.zIndex = '999999';
-    rainContainer.style.overflow = 'hidden';
-    document.body.appendChild(rainContainer);
+
+// ========================================================
+// 🌌 СИСТЕМАИ СИНАМОӢ ВА ИНТЕРФЕЙСИ АРТ (CINEMATIC SYSTEM v2)
+// ========================================================
+function initCinematicSystem() {
+    const view = document.createElement('div');
+    view.id = 'cinematic-viewport';
+    view.style.position = 'fixed';
+    view.style.top = '0'; view.style.left = '0';
+    view.style.width = '100vw'; view.style.height = '100vh';
+    view.style.pointerEvents = 'none'; view.style.zIndex = '999997';
+    view.style.overflow = 'hidden';
+    document.body.appendChild(view);
+
+    for(let f=1; f<=2; f++) {
+        const fog = document.createElement('div');
+        fog.className = `fog-layer-${f}`;
+        view.appendChild(fog);
+    }
+
+    for (let i = 0; i < 45; i++) {
+        const star = document.createElement('div');
+        star.className = 'cinematic-star';
+        star.style.width = Math.random() * 2 + 1 + 'px'; star.style.height = star.style.width;
+        star.style.top = Math.random() * 75 + 'vh'; star.style.left = Math.random() * 100 + 'vw';
+        star.style.animationDelay = Math.random() * 4 + 's';
+        view.appendChild(star);
+    }
 
     setInterval(() => {
+        const dropLeft = Math.random() * 100;
         const drop = document.createElement('div');
-        drop.className = 'rain-drop';
-        drop.style.left = Math.random() * 100 + 'vw';
-        drop.style.animationDuration = (Math.random() * 1.2 + 0.8) + 's';
-        drop.style.opacity = Math.random() * 0.5 + 0.2;
-        rainContainer.appendChild(drop);
-        setTimeout(() => { drop.remove(); }, 2000);
-    }, 120);
+        drop.className = 'heavy-drop';
+        drop.style.left = dropLeft + 'vw';
+        drop.style.animationDuration = (Math.random() * 0.5 + 0.6) + 's'; 
+        drop.style.opacity = Math.random() * 0.4 + 0.2;
+        view.appendChild(drop);
+
+        setTimeout(() => {
+            const splash = document.createElement('div');
+            splash.className = 'drop-splash';
+            splash.style.left = dropLeft + 'vw';
+            view.appendChild(splash);
+            setTimeout(() => splash.remove(), 400);
+            drop.remove();
+        }, 1000);
+    }, 50);
+
+    setInterval(() => {
+        const meteor = document.createElement('div');
+        meteor.className = 'dynamic-meteor';
+        meteor.style.top = (Math.random() * 30 - 60) + 'px';
+        meteor.style.left = (Math.random() * 80 + 10) + 'vw';
+        meteor.style.animationDuration = (Math.random() * 1 + 1) + 's';
+        
+        const mTail = document.createElement('div');
+        mTail.className = 'meteor-tail';
+        meteor.appendChild(mTail);
+        
+        view.appendChild(meteor);
+        setTimeout(() => meteor.remove(), 1500);
+    }, 3000);
+
+    setInterval(() => {
+        if(Math.random() > 0.3) {
+            const flash = document.createElement('div');
+            flash.className = 'lightning-flash';
+            view.appendChild(flash);
+            setTimeout(() => flash.remove(), 300);
+        }
+    }, 14000);
+
+    const LEAF_EMOJIS = ['🍂', '🍁'];
+    setInterval(() => {
+        const leaf = document.createElement('div');
+        leaf.className = 'falling-leaf';
+        leaf.innerText = LEAF_EMOJIS[Math.floor(Math.random() * LEAF_EMOJIS.length)];
+        leaf.style.left = Math.random() * 100 + 'vw';
+        leaf.style.fontSize = Math.random() * 12 + 12 + 'px';
+        leaf.style.animationDuration = (Math.random() * 4 + 4) + 's'; 
+        leaf.style.animationDelay = Math.random() * 2 + 's';
+        leaf.style.opacity = Math.random() * 0.5 + 0.3;
+        
+        view.appendChild(leaf);
+        setTimeout(() => leaf.remove(), 8000);
+    }, 900);
 }
+
+const dynamicStyles = document.createElement("style");
+dynamicStyles.innerText = `
+.cinematic-star { position: absolute; background: #fff; border-radius: 50%; opacity: 0.4; animation: twinkleC 4s infinite ease-in-out; }
+@keyframes twinkleC { 0%, 100% { opacity: 0.1; } 50% { opacity: 0.7; } }
+
+.heavy-drop { position: absolute; top: -40px; width: 1.5px; height: 35px; background: linear-gradient(transparent, rgba(255,255,255,0.5)); animation: fallC linear forwards; }
+@keyframes fallC { 0% { transform: translateY(0) rotate(8deg); } 100% { transform: translateY(102vh) rotate(8deg); } }
+
+.drop-splash { position: absolute; bottom: 0; width: 6px; height: 3px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.4); border-bottom: none; animation: splashAnim 0.4s ease-out forwards; }
+@keyframes splashAnim { 0% { transform: scale(0.5); opacity: 0.8; } 100% { transform: scale(2.5); opacity: 0; } }
+
+.dynamic-meteor { position: absolute; width: 3px; height: 3px; background: #fff; border-radius: 50%; boxShadow: 0 0 15px #fff; animation: meteorAnim linear forwards; }
+.meteor-tail { position: absolute; top: 0; left: 0; width: 110px; height: 1px; background: linear-gradient(to left, rgba(255,255,255,0.6), transparent); transform: rotate(-40deg) translateX(-110px); }
+@keyframes meteorAnim { 0% { transform: translate(0, 0) rotate(40deg); opacity: 1; } 100% { transform: translate(-600px, 600px) rotate(40deg); opacity: 0; } }
+
+.fog-layer-1, .fog-layer-2 { position: absolute; top: 0; left: 0; width: 200%; height: 100%; background: radial-gradient(circle at 50% 80%, rgba(255,255,255,0.03), transparent 60%); pointer-events: none; }
+.fog-layer-1 { animation: fogMove 60s linear infinite; }
+.fog-layer-2 { background: radial-gradient(circle at 30% 40%, rgba(255,255,255,0.02), transparent 50%); animation: fogMove 45s linear infinite reverse; }
+@keyframes fogMove { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+.lightning-flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.07); animation: lightningAnim 0.35s ease-out forwards; }
+@keyframes lightningAnim { 0%, 100% { opacity: 0; } 20%, 40% { opacity: 1; } 30% { opacity: 0.3; } }
+
+.falling-leaf { position: absolute; top: -20px; pointer-events: none; user-select: none; animation: leafFallAnim linear forwards; }
+@keyframes leafFallAnim {
+    0% { transform: translateY(0) translateX(0) rotate(0deg); }
+    50% { transform: translateY(50vh) translateX(30px) rotate(180deg); }
+    100% { transform: translateY(105vh) translateX(-20px) rotate(360deg); }
+}
+`;
+document.head.appendChild(dynamicStyles);
